@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../models/course.dart';
 
 const Color mainColor = Colors.blue;
@@ -15,46 +14,49 @@ class CourseScoreForm extends StatefulWidget {
 
 class _CourseScoreFormState extends State<CourseScoreForm> {
   final _formKey = GlobalKey<FormState>();
-
-  late String _enteredName;
-  late double _enteredScore;
+  final _nameController = TextEditingController();
+  final _scoreController = TextEditingController(); 
 
   @override
-  void initState() {
-    super.initState();
-    _enteredName = '';
-    _enteredScore = 50;
+  void dispose() {
+    _nameController.dispose();
+    _scoreController.dispose();
+    super.dispose();
   }
 
   void _saveItem() {
-    bool isValid = _formKey.currentState!.validate();
+    if (!_formKey.currentState!.validate()) return;
 
-    if (isValid) {
-      _formKey.currentState!.save();
-      Navigator.of(
-        context,
-      ).pop(CourseScore(studentName: _enteredName, studenScore: _enteredScore));
-    }
+    String enteredName = _nameController.text.trim();
+    double? enteredScore = double.tryParse(_scoreController.text);
+
+    if (enteredScore == null) return;
+
+    Navigator.of(context).pop(
+      CourseScore(studentName: enteredName, studentScore: enteredScore),
+    );
   }
 
+
+
+
+
   String? validateName(String? value) {
-    if (value == null ||
-        value.isEmpty ||
-        value.trim().length <= 1 ||
-        value.trim().length > 50) {
+    if (value == null || value.trim().isEmpty || value.trim().length > 50) {
       return 'Must be between 1 and 50 characters.';
     }
     return null;
   }
 
   String? validateScore(String? value) {
-    if (value == null ||
-        value.isEmpty ||
-        double.tryParse(value) == null ||
-        double.tryParse(value)! < 0 ||
-        double.tryParse(value)! > 100) {
-      return 'Must be a score bteween 0 and 100';
+    value = value?.trim();
+    if (value == null || value.isEmpty) return 'Score is required.';
+
+    final score = double.tryParse(value);
+    if (score == null || score < 0 || score > 100) {
+      return 'Must be a score between 0 and 100';
     }
+
     return null;
   }
 
@@ -74,22 +76,17 @@ class _CourseScoreFormState extends State<CourseScoreForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               TextFormField(
-                initialValue: _enteredName,
+                controller: _nameController,
                 maxLength: 50,
                 decoration: const InputDecoration(label: Text('Name')),
                 validator: validateName,
-                onSaved: (value) {
-                  _enteredName = value!;
-                },
               ),
               const SizedBox(height: 10),
               TextFormField(
+                controller: _scoreController,
+                keyboardType: TextInputType.number,
                 decoration: const InputDecoration(label: Text('Score')),
-                initialValue: _enteredScore.toString(),
                 validator: validateScore,
-                onSaved: (value) {
-                  _enteredScore = double.parse(value!);
-                },
               ),
               const Expanded(child: SizedBox(height: 12)),
               ElevatedButton(

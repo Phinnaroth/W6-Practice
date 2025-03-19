@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../model/post.dart';
 import '../providers/async_value.dart';
 import '../providers/post_provider.dart';
@@ -8,41 +9,43 @@ class PostScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    //  1 - Get the post provider
     final PostProvider postProvider = Provider.of<PostProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
+        title: const Text('All Posts'), // Change title
         actions: [
           IconButton(
-            // 2- Fetch the post
-            onPressed: () => {postProvider.fetchPost(45)},
-            icon: const Icon(Icons.update),
+            onPressed: () => {postProvider.fetchAllPosts()}, // Fetch all posts
+            icon: const Icon(Icons.refresh), // Change icon
           ),
         ],
       ),
-
-      // 3 -  Display the post
       body: Center(child: _buildBody(postProvider)),
     );
   }
 
   Widget _buildBody(PostProvider courseProvider) {
-    final postValue = courseProvider.postValue;
+    final allPostsValue = courseProvider.allPostsValue; // Use allPostsValue
 
-    if (postValue == null) {
-      return Text('Tap refresh to display post'); // display an empty state
+    if (allPostsValue == null) {
+      return Text('Tap refresh to display posts');
     }
 
-    switch (postValue.state) {
+    switch (allPostsValue.state) {
       case AsyncValueState.loading:
-        return CircularProgressIndicator(); // display a progress
+        return CircularProgressIndicator();
 
       case AsyncValueState.error:
-        return Text('Error: ${postValue.error}'); // display a error
+        return Text('Error: ${allPostsValue.error}');
 
       case AsyncValueState.success:
-        return PostCard(post: postValue.data!); // display the post
+        return ListView.builder( // Display list
+          itemCount: allPostsValue.data!.length,
+          itemBuilder: (context, index) {
+            return PostCard(post: allPostsValue.data![index]);
+          },
+        );
     }
   }
 }

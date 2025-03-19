@@ -7,7 +7,7 @@ class MockPostRepository extends PostRepository {
   Future<Post> getPost(int postId) {
     return Future.delayed(Duration(seconds: 5), () {
       if (postId != 25) {
-        throw Exception("No post found");
+        throw Exception("No posts for now");
       }
       return Post(
         id: 25,

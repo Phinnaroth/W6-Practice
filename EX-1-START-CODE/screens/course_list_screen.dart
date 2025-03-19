@@ -1,31 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/course.dart';
+import '../provider/courses_provider.dart';
 import 'course_screen.dart';
 
 const Color mainColor = Colors.blue;
 
-class CourseListScreen extends StatefulWidget {
-  const CourseListScreen({super.key});
+class CourseListScreen extends StatelessWidget {
+  CourseListScreen({super.key});
 
-  @override
-  State<CourseListScreen> createState() => _CourseListScreenState();
-}
-
-class _CourseListScreenState extends State<CourseListScreen> {
-  final List<Course> _allCourses = [Course(name: 'HTML'), Course(name: 'JAVA')];
-
-  void _editCourse(Course course) async {
-    await Navigator.of(context).push<Course>(
-      MaterialPageRoute(builder: (ctx) => CourseScreen(course: course)),
+  void _editCourse(BuildContext context, Course course) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (ctx) => CourseScreen(courseId: course.name)),
     );
-
-    setState(() {
-      // trigger a rebuild
-    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final courseProvider = Provider.of<CoursesProvider>(context);
+    final allCourses = courseProvider.courses;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -33,15 +27,14 @@ class _CourseListScreenState extends State<CourseListScreen> {
         title: const Text('SCORE APP', style: TextStyle(color: Colors.white)),
       ),
       body: ListView.builder(
-        itemCount: _allCourses.length,
-        itemBuilder:
-            (ctx, index) => Dismissible(
-              key: Key(_allCourses[index].name),
-              child: CourseTile(
-                course: _allCourses[index],
-                onEdit: _editCourse,
-              ),
-            ),
+        itemCount: allCourses.length,
+        itemBuilder: (ctx, index) => Dismissible(
+          key: Key(allCourses[index].name),
+          child: CourseTile(
+            course: allCourses[index],
+            onEdit: _editCourse,
+          ),
+        ),
       ),
     );
   }
@@ -51,7 +44,7 @@ class CourseTile extends StatelessWidget {
   const CourseTile({super.key, required this.course, required this.onEdit});
 
   final Course course;
-  final Function(Course) onEdit;
+  final Function(BuildContext, Course) onEdit;
 
   int get numberOfScores => course.scores.length;
 
@@ -61,7 +54,7 @@ class CourseTile extends StatelessWidget {
 
   String get averageText {
     String average = course.average.toStringAsFixed(1);
-    return course.hasScore ? "Average : $average" : '';
+    return course.hasScore ? "Average: $average" : '';
   }
 
   @override
@@ -70,16 +63,9 @@ class CourseTile extends StatelessWidget {
       padding: const EdgeInsets.all(10.0),
       child: Card(
         color: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(5.0),
-          child: ListTile(
-            onTap: () => onEdit(course),
-            title: Text(course.name),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [Text(numberText), Text(averageText)],
-            ),
-          ),
+        child: ListTile(
+          onTap: () => onEdit(context, course),
+          title: Text(course.name),
         ),
       ),
     );
